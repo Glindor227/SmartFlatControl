@@ -16,7 +16,10 @@ public class KDHost {
         KDHostConfig localConfig = new KDHostConfig();
         localConfig.LoadConfig();
         //todo надо предусмотреть что соединение с сервером не открылось
-        Network.start(KDHostConfig.getIpServer(),KDHostConfig.getPortServer());
+        if(!Network.start(KDHostConfig.getIpServer(),KDHostConfig.getPortServer())){
+            System.out.println("Не смогли открыть сетевое соединение!");
+        }
+
 
         Network.sendMsg(new StartKDHost(KDHostConfig.getLogin()));
         while (true) {

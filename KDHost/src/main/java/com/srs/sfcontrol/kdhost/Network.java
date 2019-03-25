@@ -12,15 +12,17 @@ class Network {
     private static ObjectEncoderOutputStream out;
     private static ObjectDecoderInputStream in;
 
-    static void start(String ip,Integer port) {
+    static boolean start(String ip,Integer port) {
         System.out.println("Запускаем Network");
         try {
             socket = new Socket(ip, port);
             out = new ObjectEncoderOutputStream(socket.getOutputStream());
             in = new ObjectDecoderInputStream(socket.getInputStream(),10 * 1024 * 1024);
+            return true;
 
         } catch (IOException e) {
             e.printStackTrace();
+            return false;
         }
     }
 
