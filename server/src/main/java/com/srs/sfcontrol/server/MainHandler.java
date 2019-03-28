@@ -3,6 +3,7 @@ package com.srs.sfcontrol.server;
 import com.srs.sfcontrol.common.ConfigKDHost;
 import com.srs.sfcontrol.common.StartKDHost;
 import com.srs.sfcontrol.common.StateKDHost;
+import com.srs.common.ToAndroid;
 import com.srs.sfcontrol.server.db.DBService;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -22,8 +23,15 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg){
         try {
+            System.out.println("channelRead чтото пришло");
             if (msg == null) {
+                System.out.println("msg == null");
                 return;
+            }
+            if (msg instanceof String) {
+                String ss = (String)msg;
+                System.out.println("Пришла строка "+ss);
+                ctx.writeAndFlush(new ToAndroid("Здарова"));// послали конфигурацию для слежения
             }
 
 

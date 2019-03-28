@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class TimerHost{
     private
@@ -44,7 +45,7 @@ public class TimerHost{
         //лезем в базу и вытаскиваем список всех КД
         //TODO надо проверять всели в порядке с базой
         try {
-            List<Integer> listKD = DBService.getKDList();
+            Set<Integer> listKD = DBService.getKDList().keySet();
             for (Integer idKD:listKD) {
                 timeKD.put(idKD,new PingInfo(System.currentTimeMillis()));
             }

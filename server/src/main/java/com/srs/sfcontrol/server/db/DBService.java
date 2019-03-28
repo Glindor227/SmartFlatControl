@@ -4,9 +4,8 @@ import com.srs.sfcontrol.common.LoggerParams;
 
 import java.sql.*;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.Date;
-import java.util.List;
 
 // Новый класс авториации через БД
 public class DBService {
@@ -59,12 +58,12 @@ public class DBService {
     }
 
     //TODO надо делать метод потоконезависимым
-    public static List<Integer> getKDList() throws SQLException {
-        ResultSet rs = statement.executeQuery("SELECT id FROM hostKD;");
-        ArrayList<Integer> arr = new ArrayList<>();
+    public static Map<Integer,String> getKDList() throws SQLException {
+        ResultSet rs = statement.executeQuery("SELECT id,name FROM hostKD;");
+        Map<Integer,String> arr = new HashMap();
         //TODO сделать на стимах
         while (rs.next()) {
-            arr.add(rs.getInt(1));
+            arr.put(rs.getInt(1),rs.getString(2));
         }
         return arr;
     }
@@ -95,6 +94,21 @@ public class DBService {
         psInsertLog =  connection.prepareStatement("INSERT INTO log (id_host, id_type,value,date) VALUES (?, ?, ?, ?);");
 
 
+    }
+
+    public static HashMap<Integer,Integer> getCurrentValue(Integer idKD) {
+        HashMap<Integer, Integer> result=new HashMap<>();
+        ResultSet rs = null;
+        try {
+            rs = statement.executeQuery("SELECT id_type,value FROM value WHERE id_host = '"+idKD+"';");
+            while (rs.next()) {
+                result.put(rs.getInt(1),rs.getInt(2));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 
     public static void setCurrentValue(Integer idKD, Integer typeParam, Integer stateParam,Boolean logAdd) {

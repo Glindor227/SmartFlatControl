@@ -1,5 +1,6 @@
 package com.srs.sfcontrol.server;
 
+import com.srs.common.ToAndroid;
 import com.srs.sfcontrol.server.config.ServerConfig;
 import com.srs.sfcontrol.server.db.DBService;
 import io.netty.bootstrap.ServerBootstrap;
@@ -13,6 +14,10 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.serialization.ClassResolvers;
 import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
+
+import java.io.*;
+import java.net.ServerSocket;
+import java.net.Socket;
 
 //@
 public class Server {
@@ -30,6 +35,7 @@ public class Server {
         timerHost.start();
 
         try {
+            AndroidHandler.runAndroid();
             runNetty1();
         } catch (Exception e) {
             e.printStackTrace();
