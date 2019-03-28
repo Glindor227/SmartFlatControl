@@ -28,54 +28,56 @@ public class AndroidHandler {
                 return;
             }
             Socket socket = null;
-            try {
-                socket = serverSocket.accept();
-                System.out.println("пришло чтото от Android ");
-                ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
-                ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-                while (true){
-                    System.out.println("ждем Android");
-                    Object msg = ois.readObject();//todo если тут выпадет исключение, то мы улетим из цикла работы с Андроиом. Надо обавить ревхождение в опреос  Андроидом
-                    if(msg instanceof String) {
-                        String str = (String)msg;
-                        if (str.equals("getParams")) {
-                            System.out.println("пришол от Android запрос:" + str);
-//                            AndroidTest(dos);
-                            Map<Integer,String> mapKD = DBService.getKDList();
-                            System.out.println("Готовим список для " + mapKD.size() +" ЦПУ КД");
-                            ToAndroid[] taa = new ToAndroid[mapKD.size()];
-                            int index = 0;
-                            for (Integer idKD:mapKD.keySet()) {
-                                ToAndroid ta = new ToAndroid(mapKD.get(idKD));
-                                Map<Integer,Integer> mapParams = DBService.getCurrentValue(idKD);
-                                System.out.println("Для " + ta.getKdName() +" "+mapParams.size()+" параметров. "+mapParams);
-                                for (Integer paramName:mapParams.keySet()) {
-                                    ta.add(paramName,mapParams.get(paramName));
+            while(true){
+                try {
+                    System.out.println("Начинаем ждать от Android ");
+                    socket = serverSocket.accept();
+                    System.out.println("пришло чтото от Android ");
+                    ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+                    ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+                    while (true){
+                        System.out.println("ждем Android");
+                        Object msg = ois.readObject();
+                        if(msg instanceof String) {
+                            String str = (String)msg;
+                            if (str.equals("getParams")) {
+                                System.out.println("пришол от Android запрос:" + str);
+    //                            AndroidTest(dos);
+                                Map<Integer,String> mapKD = DBService.getKDList();
+                                System.out.println("Готовим список для " + mapKD.size() +" ЦПУ КД");
+                                ToAndroid[] taa = new ToAndroid[mapKD.size()];
+                                int index = 0;
+                                for (Integer idKD:mapKD.keySet()) {
+                                    ToAndroid ta = new ToAndroid(mapKD.get(idKD));
+                                    Map<Integer,Integer> mapParams = DBService.getCurrentValue(idKD);
+                                    System.out.println("Для " + ta.getKdName() +" "+mapParams.size()+" параметров. "+mapParams);
+                                    for (Integer paramName:mapParams.keySet()) {
+                                        ta.add(paramName,mapParams.get(paramName));
+                                    }
+                                    taa[index] = ta;
+                                    index++;
                                 }
-                                taa[index] = ta;
-                                index++;
+
+                                oos.writeObject(taa);
+
+                            }else {
+                                System.out.println("пришло от Android неизвестная строка:" + str);
                             }
-
-                            oos.writeObject(taa);
-
-                        }else {
-                            System.out.println("пришло от Android неизвестная строка:" + str);
                         }
+                        else
+                            System.out.println("пришло от Android непонятно что:" + msg.getClass());
+
+
                     }
-                    else
-                        System.out.println("пришло от Android непонятно что:" + msg.getClass());
-
-
+                    //todo надо совобождать ресурсы - Stream и Socket
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                } catch (SQLException e) {
+                    e.printStackTrace();
                 }
-                //todo надо совобождать ресурсы - Stream и Socket
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            } catch (SQLException e) {
-                e.printStackTrace();
             }
-
 
         });
         th.start();
