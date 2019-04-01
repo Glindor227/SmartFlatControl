@@ -12,7 +12,7 @@ public class DBService {
 
     private static Connection connection;
     private static Statement statement;
-    private static PreparedStatement psInsertCurrent,psInsertLog;
+    private static PreparedStatement psInsertCurrent,psInsertLog,psAndroidAuth;
 
 
     public static void initDBService() {
@@ -92,6 +92,7 @@ public class DBService {
     private static void prepareStatements() throws SQLException {
         psInsertCurrent = connection.prepareStatement("INSERT INTO value (id_host, id_type,value,date) VALUES (?, ?, ?, ?);");
         psInsertLog =  connection.prepareStatement("INSERT INTO log (id_host, id_type,value,date) VALUES (?, ?, ?, ?);");
+        psAndroidAuth =  connection.prepareStatement("SELECT * FROM user  WHERE login = ? AND pass = ?");
 
 
     }
@@ -136,4 +137,16 @@ public class DBService {
 
     }
 
+    public static Boolean getAndoidUser(String login, String password) {
+        try {
+            System.out.println("Проверка авторизаии "+login+" "+password);
+            psAndroidAuth.setString(1,login);
+            psAndroidAuth.setString(2,password);
+            ResultSet rs =  psAndroidAuth.executeQuery();
+            return rs.next();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

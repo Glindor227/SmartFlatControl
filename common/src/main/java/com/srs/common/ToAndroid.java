@@ -1,11 +1,9 @@
 package com.srs.common;
 
-
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ToAndroid implements Serializable {
+public class ToAndroid extends AbstractAndroid {
     private static final long serialVersionUID =3201728743084568826L;
     private String kdName;
     private Map<Integer,Integer> paramArray = new HashMap<>();

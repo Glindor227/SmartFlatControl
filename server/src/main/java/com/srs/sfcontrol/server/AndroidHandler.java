@@ -1,5 +1,7 @@
 package com.srs.sfcontrol.server;
 
+import com.srs.common.Authentication;
+import com.srs.common.AuthenticationGood;
 import com.srs.common.ToAndroid;
 import com.srs.sfcontrol.server.config.ServerConfig;
 import com.srs.sfcontrol.server.db.DBService;
@@ -7,16 +9,17 @@ import com.srs.sfcontrol.server.db.DBService;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.lang.reflect.Array;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 public class AndroidHandler {
 
+    private static Boolean isAuth = false;// есть ли авторизация
+
+    //todo пока  делаем поддержку одного Android подклюения
+    // todo сделать отключение соединения, если долго нет активности
     public static void runAndroid(){
         Thread th = new Thread(() -> {
             System.out.println("Стартовали поток  runAndroid");
@@ -27,10 +30,10 @@ public class AndroidHandler {
                 e.printStackTrace();
                 return;
             }
-            Socket socket = null;
-            while(true){
+            while (true){
+                System.out.println("Инициализация Android ");
+                Socket socket = null;
                 try {
-                    System.out.println("Начинаем ждать от Android ");
                     socket = serverSocket.accept();
                     System.out.println("пришло чтото от Android ");
                     ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
@@ -43,29 +46,30 @@ public class AndroidHandler {
                             if (str.equals("getParams")) {
                                 System.out.println("пришол от Android запрос:" + str);
     //                            AndroidTest(dos);
-                                Map<Integer,String> mapKD = DBService.getKDList();
-                                System.out.println("Готовим список для " + mapKD.size() +" ЦПУ КД");
-                                ToAndroid[] taa = new ToAndroid[mapKD.size()];
-                                int index = 0;
-                                for (Integer idKD:mapKD.keySet()) {
-                                    ToAndroid ta = new ToAndroid(mapKD.get(idKD));
-                                    Map<Integer,Integer> mapParams = DBService.getCurrentValue(idKD);
-                                    System.out.println("Для " + ta.getKdName() +" "+mapParams.size()+" параметров. "+mapParams);
-                                    for (Integer paramName:mapParams.keySet()) {
-                                        ta.add(paramName,mapParams.get(paramName));
-                                    }
-                                    taa[index] = ta;
-                                    index++;
+                                if(!isAuth){
+                                    oos.writeObject("Не было аутентификации.");
+                                    continue;
                                 }
-
-                                oos.writeObject(taa);
+                                sendParamsToAndroid(oos);
 
                             }else {
                                 System.out.println("пришло от Android неизвестная строка:" + str);
                             }
+                            continue;
                         }
-                        else
-                            System.out.println("пришло от Android непонятно что:" + msg.getClass());
+                        if(msg instanceof Authentication){
+                            System.out.println("Пришла аутентификация.");
+                            Authentication authentication = (Authentication)msg;
+                            isAuth = DBService.getAndoidUser(authentication.getLogin(),authentication.getPassword());
+                            if(isAuth)
+                                oos.writeObject(new AuthenticationGood());
+                            else
+                                oos.writeObject("Аутентификация не прошла.");
+
+                            continue;
+                        }
+
+                        System.out.println("пришло от Android непонятно что:" + msg.getClass());
 
 
                     }
@@ -77,10 +81,30 @@ public class AndroidHandler {
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
-            }
 
+
+            }
         });
         th.start();
 
+    }
+
+    private static void sendParamsToAndroid(ObjectOutputStream oos) throws SQLException, IOException {
+        Map<Integer,String> mapKD = DBService.getKDList();
+        System.out.println("Готовим список для " + mapKD.size() +" ЦПУ КД");
+        ToAndroid[] taa = new ToAndroid[mapKD.size()];
+        int index = 0;
+        for (Integer idKD:mapKD.keySet()) {
+            ToAndroid ta = new ToAndroid(mapKD.get(idKD));
+            Map<Integer,Integer> mapParams = DBService.getCurrentValue(idKD);
+            System.out.println("Для " + ta.getKdName() +" "+mapParams.size()+" параметров. "+mapParams);
+            for (Integer paramName:mapParams.keySet()) {
+                ta.add(paramName,mapParams.get(paramName));
+            }
+            taa[index] = ta;
+            index++;
+        }
+
+        oos.writeObject(taa);
     }
 }
